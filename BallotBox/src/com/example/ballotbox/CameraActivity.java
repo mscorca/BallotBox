@@ -21,7 +21,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
-public class MainActivity extends Activity {
+public class CameraActivity extends Activity {
 
 	// Activity request codes
 	private static final int CAMERA_CAPTURE_IMAGE_REQUEST_CODE = 100;

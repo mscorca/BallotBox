@@ -4,7 +4,7 @@
     android:layout_height="fill_parent"
     android:orientation="horizontal"
     android:baselineAligned="false"
-    tools:context=".MainActivity" >
+    tools:context=".CameraActivity" >
 
     <LinearLayout
         android:layout_width="0dp"
