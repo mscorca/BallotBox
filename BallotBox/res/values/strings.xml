@@ -12,7 +12,7 @@
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
-    limitations under the License.
+    limitations under the License.
 -->
 
 <resources>
@@ -37,5 +37,6 @@
     <string name="app_id">355198514515820</string>
     <string name="exception">Exception: %1$s</string>
     <string name="title_activity_json">JSONActivity</string>
+    <string name="title_activity_login">LoginActivity</string>
 
 </resources>

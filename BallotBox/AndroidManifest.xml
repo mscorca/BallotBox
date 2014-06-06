@@ -38,6 +38,12 @@
         <activity
             android:name="com.example.ballotbox.JSONActivity"
             android:label="@string/title_activity_json" >
+        </activity>
+        <activity
+            android:name="com.example.ballotbox.LoginActivity"
+            android:label="@string/title_activity_login"
+            android:launchMode="standard" >
+            
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
