@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 import com.facebook.*;
 import com.facebook.widget.LoginButton;
@@ -15,6 +16,8 @@ public class MainFragment extends Fragment {
 	
 	private static final String TAG = "LOGIN_ACTIVITY";
 	private UiLifecycleHelper uiHelper;
+	
+	public Button btnFriends;
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, 
@@ -25,7 +28,20 @@ public class MainFragment extends Fragment {
 	    LoginButton authButton = (LoginButton) view.findViewById(R.id.authButton);
 	    authButton.setFragment(this);
 
+	    btnFriends = (Button) view.findViewById(R.id.friendsbtn);
+	    
+	    btnFriends.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// capture picture
+				displayFriends();
+			}
+		});
+	    
 	    return view;
+	    
+	    
 	}
 	
 	@Override
@@ -88,6 +104,10 @@ public class MainFragment extends Fragment {
 	    } else if (state.isClosed()) {
 	        Log.i(TAG, "Logged out...");
 	    }
+	}
+	
+	private void displayFriends(){
+		Log.d(TAG,"DisplayFriends()");
 	}
 
 }
