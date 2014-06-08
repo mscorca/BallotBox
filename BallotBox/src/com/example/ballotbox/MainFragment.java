@@ -1,6 +1,6 @@
 package com.example.ballotbox;
 
-import android.support.v4.app.Fragment;
+import android.support.v4.app.*;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -26,6 +26,7 @@ public class MainFragment extends Fragment {
 	    View view = inflater.inflate(R.layout.activity_login, container, false);
 
 	    LoginButton authButton = (LoginButton) view.findViewById(R.id.authButton);
+	    authButton.setReadPermissions("user_photos", "user_friends", "read_friendlists");
 	    authButton.setFragment(this);
 
 	    btnFriends = (Button) view.findViewById(R.id.friendsbtn);
@@ -40,8 +41,7 @@ public class MainFragment extends Fragment {
 		});
 	    
 	    return view;
-	    
-	    
+   
 	}
 	
 	@Override
@@ -107,6 +107,25 @@ public class MainFragment extends Fragment {
 	}
 	
 	private void displayFriends(){
+		
+		/*
+		Fragment fragment;
+		
+		fragment = new FriendsList();
+
+		FragmentManager fragmentManager2 = getFragmentManager();
+		FragmentTransaction fragmentTransaction2 = fragmentManager2.beginTransaction();
+		
+		fragmentTransaction2.hide(MainFragment.this);
+		fragmentTransaction2.add(android.R.id.content, fragment);
+		fragmentTransaction2.addToBackStack(null);
+		fragmentTransaction2.commit();
+		*/
+		
+		Intent intent = new Intent(getActivity(), FriendsList.class);
+		
+		startActivity(intent);
+		
 		Log.d(TAG,"DisplayFriends()");
 	}
 
