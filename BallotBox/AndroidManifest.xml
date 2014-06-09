@@ -23,6 +23,12 @@
         <activity
             android:name="com.example.ballotbox.CameraActivity"
             android:label="@string/app_name" >
+            
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <activity
             android:name="com.example.ballotbox.FacebookLoginActivity"
@@ -38,29 +44,6 @@
         <activity
             android:name="com.example.ballotbox.JSONActivity"
             android:label="@string/title_activity_json" >
-        </activity>
-        <activity
-            android:name="com.example.ballotbox.LoginActivity"
-            android:label="@string/title_activity_login"
-            android:launchMode="standard" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name="com.example.ballotbox.FriendsList"
-            android:label="@string/title_activity_friends" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name="com.example.ballotbox.PickFriendsActivity"
-            android:label="@string/title_activity_pick_friends" >
         </activity>
     </application>
 

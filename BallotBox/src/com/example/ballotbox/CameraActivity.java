@@ -1,19 +1,41 @@
 package com.example.ballotbox;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.*;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+//import org.apache.commons.codec.binary.Base64;
+
+import org.apache.http.*;
+
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -36,7 +58,7 @@ public class CameraActivity extends Activity {
 
 	private ImageView imgPreview;
 	private VideoView videoPreview;
-	private Button btnCapturePicture, btnRecordVideo;
+	private Button btnCapturePicture, btnRecordVideo, btnSendtoServer;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +68,7 @@ public class CameraActivity extends Activity {
 		imgPreview = (ImageView) findViewById(R.id.imgPreview);
 		videoPreview = (VideoView) findViewById(R.id.videoPreview);
 		btnCapturePicture = (Button) findViewById(R.id.btnCapturePicture);
+		btnSendtoServer = (Button) findViewById(R.id.btnSendtoServer);
 		btnRecordVideo = (Button) findViewById(R.id.btnRecordVideo);
 
 		/*
@@ -72,6 +95,15 @@ public class CameraActivity extends Activity {
 			}
 		});
 
+		btnSendtoServer.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// post to server
+				new ImageUploadTask().execute();
+			}
+		});
+		
 		// Checking camera availability
 		if (!isDeviceSupportCamera()) {
 			Toast.makeText(getApplicationContext(),
@@ -211,6 +243,7 @@ public class CameraActivity extends Activity {
 					options);
 
 			imgPreview.setImageBitmap(bitmap);
+			
 		} catch (NullPointerException e) {
 			e.printStackTrace();
 		}
@@ -279,5 +312,65 @@ public class CameraActivity extends Activity {
 		}
 
 		return mediaFile;
+	}
+	
+	/**
+	* The class connects with server and uploads the photo
+	* 
+	* 
+	*/
+	class ImageUploadTask extends AsyncTask<Void, Void, String> {
+	 private String webAddressToPost = "http://people.ucsc.edu/~mscorca/HW1/images";
+
+	 // private ProgressDialog dialog;
+	 private ProgressDialog dialog = new ProgressDialog(CameraActivity.this);
+
+	 @Override
+	 protected void onPreExecute() {
+	  dialog.setMessage("Uploading...");
+	  dialog.show();
+	 }
+
+	 @Override
+	 protected String doInBackground(Void... params) {
+	  try {
+	   HttpClient httpClient = new DefaultHttpClient();
+	   HttpContext localContext = new BasicHttpContext();
+	   HttpPost httpPost = new HttpPost(webAddressToPost);
+
+	   MultipartEntityBuilder entity = MultipartEntityBuilder.create();
+	   entity.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+	   
+	   Bitmap bitmap = ((BitmapDrawable)imgPreview.getDrawable()).getBitmap();
+	   
+	   ByteArrayOutputStream bos = new ByteArrayOutputStream();
+	   bitmap.compress(CompressFormat.JPEG, 100, bos);
+	   byte[] data = bos.toByteArray();
+	   String fileString = Base64.encodeToString(data, Base64.DEFAULT);
+
+       File file = new File(fileString);
+       FileBody fileBody = new FileBody(file);
+	   
+	   entity.addPart("uploaded", fileBody);
+	   //entity.addPart("someOtherStringToSend", new ContentBody("your string here"));
+
+	   httpPost.setEntity(entity.build());
+	   HttpResponse response = httpClient.execute(httpPost,localContext);
+	   BufferedReader reader = new BufferedReader(new InputStreamReader(
+	     response.getEntity().getContent(), "UTF-8"));
+
+	   String sResponse = reader.readLine();
+	   return sResponse;
+	  } catch (Exception e) {
+	   // something went wrong. connection with the server error
+	  }
+	  return null;
+	 }
+
+	 @Override
+	 protected void onPostExecute(String result) {
+	  dialog.dismiss();
+	  Toast.makeText(getApplicationContext(), "file uploaded",Toast.LENGTH_LONG).show();
+	 }
 	}
 }
