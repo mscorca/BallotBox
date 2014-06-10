@@ -4,23 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.facebook.*;
 import com.facebook.model.GraphObject;
-import com.facebook.model.GraphObjectList;
-import com.facebook.widget.FriendPickerFragment;
-import com.facebook.widget.PickerFragment;
-import com.google.gson.Gson;
 import com.example.ballotbox.Friend;
 
 import android.support.v4.app.*;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -56,6 +47,10 @@ public class FriendsList extends FragmentActivity{
 	    	Log.d(TAG,"Active Session!");
 	    }
 	    
+	    /*
+	     * Request from facebook to grab all taggable friends, this is used to grab all friends
+	     * since the /me/friends request only grabs friends that use the application
+	     */
 	    new Request(
 	    	    session,
 	    	    "/me/taggable_friends",
@@ -70,6 +65,7 @@ public class FriendsList extends FragmentActivity{
 	    	).executeAsync();    
 	}
 	
+	//Parses the facebook response into an ArrayList<Friend>
 	public  void parseUserFromFQLResponse( Response response )
 	{
 	    try
@@ -109,7 +105,8 @@ public class FriendsList extends FragmentActivity{
 	    }
 	}
 	
-	private class MyAdapter extends ArrayAdapter<Friend>{
+	//Code from Luca De Alfaro. Sets up list view with all friends retrieved in ArrayAdapter<Friend>
+	public class MyAdapter extends ArrayAdapter<Friend>{
 
 		protected static final int LENGTH_SHORT = 3;
 		int resource;

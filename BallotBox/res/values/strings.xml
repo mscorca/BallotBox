@@ -42,5 +42,8 @@
     <string name="error_dialog_title">Error</string>
     <string name="error_dialog_button_text">OK</string>
     <string name="title_activity_pick_friends">PickFriendsActivity</string>
+    
+    <color name="black">#000000</color>
+    <color name="red">#ff0000</color>
 
 </resources>

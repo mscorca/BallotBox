@@ -12,8 +12,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.*;
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.BasicHttpContext;
@@ -24,7 +22,9 @@ import org.apache.http.*;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -41,13 +41,14 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 public class CameraActivity extends Activity {
 
 	// Activity request codes
+	public static final String SHARED_PREFERENCES = "File Keeper";
+	public static final String PREFS_FILE = "File Location";
+	private static final String TAG = "CAMERA_ACTIVITY";
 	private static final int CAMERA_CAPTURE_IMAGE_REQUEST_CODE = 100;
-	private static final int CAMERA_CAPTURE_VIDEO_REQUEST_CODE = 200;
 	public static final int MEDIA_TYPE_IMAGE = 1;
 	public static final int MEDIA_TYPE_VIDEO = 2;
 
@@ -57,19 +58,20 @@ public class CameraActivity extends Activity {
 	private Uri fileUri; // file url to store image/video
 
 	private ImageView imgPreview;
-	private VideoView videoPreview;
-	private Button btnCapturePicture, btnRecordVideo, btnSendtoServer;
+	private Button btnCapturePicture, btnSendtoServer, btnGetPhotos;
+	private Context context;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		
+		context = this;
 
 		imgPreview = (ImageView) findViewById(R.id.imgPreview);
-		videoPreview = (VideoView) findViewById(R.id.videoPreview);
 		btnCapturePicture = (Button) findViewById(R.id.btnCapturePicture);
 		btnSendtoServer = (Button) findViewById(R.id.btnSendtoServer);
-		btnRecordVideo = (Button) findViewById(R.id.btnRecordVideo);
+		btnGetPhotos = (Button) findViewById(R.id.btnGetPhotos);
 
 		/*
 		 * Capture image button click event
@@ -84,23 +86,26 @@ public class CameraActivity extends Activity {
 		});
 
 		/*
-		 * Record video button click event
+		 * Sends current photo to server
 		 */
-		btnRecordVideo.setOnClickListener(new View.OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				// record video
-				recordVideo();
-			}
-		});
-
 		btnSendtoServer.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
 				// post to server
 				new ImageUploadTask().execute();
+			}
+		});
+		
+		/*
+		 * Launches activity to view current posted photos
+		 */
+		btnGetPhotos.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent(context, JSONActivity.class);
+				startActivity(intent);
 			}
 		});
 		
@@ -112,6 +117,9 @@ public class CameraActivity extends Activity {
 			// will close the app if the device does't have camera
 			finish();
 		}
+		
+		fileUri = Uri.parse(getFile(context));
+		previewCapturedImage();
 	}
 
 	/**
@@ -129,7 +137,7 @@ public class CameraActivity extends Activity {
 	}
 
 	/*
-	 * Capturing Camera Image will lauch camera app requrest image capture
+	 * Capturing Camera Image will launch camera app requrest image capture
 	 */
 	private void captureImage() {
 		Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -163,24 +171,6 @@ public class CameraActivity extends Activity {
 		fileUri = savedInstanceState.getParcelable("file_uri");
 	}
 
-	/*
-	 * Recording video
-	 */
-	private void recordVideo() {
-		Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-
-		fileUri = getOutputMediaFileUri(MEDIA_TYPE_VIDEO);
-
-		// set video quality
-		intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
-
-		intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file
-															// name
-
-		// start the video capture Intent
-		startActivityForResult(intent, CAMERA_CAPTURE_VIDEO_REQUEST_CODE);
-	}
-
 	/**
 	 * Receiving activity result method will be called after closing the camera
 	 * */
@@ -191,6 +181,7 @@ public class CameraActivity extends Activity {
 			if (resultCode == RESULT_OK) {
 				// successfully captured the image
 				// display it in image view
+				setFile(fileUri.toString());
 				previewCapturedImage();
 			} else if (resultCode == RESULT_CANCELED) {
 				// user cancelled Image capture
@@ -203,23 +194,7 @@ public class CameraActivity extends Activity {
 						"Sorry! Failed to capture image", Toast.LENGTH_SHORT)
 						.show();
 			}
-		} else if (requestCode == CAMERA_CAPTURE_VIDEO_REQUEST_CODE) {
-			if (resultCode == RESULT_OK) {
-				// video successfully recorded
-				// preview the recorded video
-				previewVideo();
-			} else if (resultCode == RESULT_CANCELED) {
-				// user cancelled recording
-				Toast.makeText(getApplicationContext(),
-						"User cancelled video recording", Toast.LENGTH_SHORT)
-						.show();
-			} else {
-				// failed to record video
-				Toast.makeText(getApplicationContext(),
-						"Sorry! Failed to record video", Toast.LENGTH_SHORT)
-						.show();
-			}
-		}
+		} 
 	}
 
 	/*
@@ -227,41 +202,23 @@ public class CameraActivity extends Activity {
 	 */
 	private void previewCapturedImage() {
 		try {
-			// hide video preview
-			videoPreview.setVisibility(View.GONE);
-
-			imgPreview.setVisibility(View.VISIBLE);
-
 			// bimatp factory
 			BitmapFactory.Options options = new BitmapFactory.Options();
 
 			// downsizing image as it throws OutOfMemory Exception for larger
 			// images
 			options.inSampleSize = 8;
+			
+			Log.d(TAG, fileUri.toString());
 
 			final Bitmap bitmap = BitmapFactory.decodeFile(fileUri.getPath(),
 					options);
 
 			imgPreview.setImageBitmap(bitmap);
+			imgPreview.setVisibility(View.VISIBLE);
 			
 		} catch (NullPointerException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/*
-	 * Previewing recorded video
-	 */
-	private void previewVideo() {
-		try {
-			// hide image preview
-			imgPreview.setVisibility(View.GONE);
-
-			videoPreview.setVisibility(View.VISIBLE);
-			videoPreview.setVideoPath(fileUri.getPath());
-			// start playing
-			videoPreview.start();
-		} catch (Exception e) {
+			Log.d(TAG, "Error in image preview");
 			e.printStackTrace();
 		}
 	}
@@ -315,9 +272,7 @@ public class CameraActivity extends Activity {
 	}
 	
 	/**
-	* The class connects with server and uploads the photo
-	* 
-	* 
+	* The class connects with server and uploads the photo 
 	*/
 	class ImageUploadTask extends AsyncTask<Void, Void, String> {
 	 private String webAddressToPost = "http://people.ucsc.edu/~mscorca/HW1/images";
@@ -372,5 +327,32 @@ public class CameraActivity extends Activity {
 	  dialog.dismiss();
 	  Toast.makeText(getApplicationContext(), "file uploaded",Toast.LENGTH_LONG).show();
 	 }
+	}
+	
+	/*
+	 * Saves fileURI to shared prefs so picture preview always displays
+	 */
+	public void setFile(String secret){
+		SharedPreferences prefs = context.getSharedPreferences(SHARED_PREFERENCES, 0);
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putString(PREFS_FILE, secret);
+		editor.commit();
+	}
+	
+	//Retrieves stored URL from shared prefs
+	public String getFile(Context context){
+		SharedPreferences prefs = context.getSharedPreferences(CameraActivity.SHARED_PREFERENCES, 0);
+		return prefs.getString(CameraActivity.PREFS_FILE, "");
+	}
+	
+	/*
+	 * ensures back button goes back to last activity
+	 */
+	@Override
+	public void onBackPressed() 
+	{
+	    Intent myIntent = new Intent(context, LoginActivity.class);
+	    startActivity(myIntent);
+	    super.onBackPressed();
 	}
 }

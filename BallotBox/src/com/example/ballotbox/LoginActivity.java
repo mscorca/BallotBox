@@ -2,16 +2,14 @@ package com.example.ballotbox;
 
 import android.support.v4.app.*;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
 
 public class LoginActivity extends FragmentActivity {
 	
 	private MainFragment mainFrag;
 	
+	//Used for LogCat debugging
 	private static final String TAG = "LOGIN_ACTIVITY";
 	
 	@Override
@@ -50,5 +48,14 @@ public class LoginActivity extends FragmentActivity {
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+	
+	/*
+	 * ensures back button goes back to last activity
+	 */
+	@Override
+	public void onBackPressed() 
+	{
+	    super.onBackPressed();
 	}
 }
